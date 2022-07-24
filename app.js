@@ -1,5 +1,5 @@
 require('colors');
-const { inquirerMenu, pausa, leerInput, listadoTareasBorrar } = require('./helpers/inquirer');
+const { inquirerMenu, pausa, leerInput, listadoTareasBorrar, confirmar, listadoTareasChecklist } = require('./helpers/inquirer');
 const { guardarArchivo, leerArchivo } = require('./helpers/guardarArchivo');
 //models
 
@@ -14,7 +14,7 @@ const main = async () => {
     }
     do {
         opcion = await inquirerMenu();
-
+        let ok;
         switch (opcion) {
             case '1':
                 //crear tarea
@@ -37,24 +37,35 @@ const main = async () => {
                 break;
             case '5':
                 //completar tareas
+                const ids = await listadoTareasChecklist(tareas.listarTareas);
+                tareas.toggleCompletadas(ids);
                 break;
 
             case '6':
                 //borrar tareas
 
                 const id = await listadoTareasBorrar(tareas.listarTareas);
-                tareas.borrarTarea(id);
+                if (id !== '0') {
+                    ok = await confirmar('¿Estás seguro?');
+                    if (ok)
+                        tareas.borrarTarea(id);
+                }
                 break;
-            default:
+            case '0':
+                ok = await confirmar('¿Estás seguro?');
+                if (!ok)
+                    opcion = '';
                 break;
         }
 
 
-        // guardarArchivo(tareas.listarTareas);
+        guardarArchivo(tareas.listarTareas);
 
         await pausa();
+
+
     } while (opcion !== '0'); // 0 es la opción de salir
-    console.log(`Opción seleccionada: ${opcion}`.green);
+
 
 }
 
